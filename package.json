@@ -10,9 +10,9 @@
   },
   "scripts": {
     "start": "webpack-dev-server --hot --inline",
-    "prebuild": "rimraf dist",
+    "prebuild": "rm -rf dist",
     "build": "webpack",
-    "reinstall": "npm i rimraf && rimraf node_modules && npm uninstall -g elm && npm i -g elm && npm i && elm package install"
+    "reinstall": "yarn global elm && yarn && elm package install"
   },
   "devDependencies": {
     "autoprefixer": "^6.7.7",

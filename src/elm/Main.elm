@@ -1,35 +1,96 @@
 module Main exposing (..)
+
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing ( onClick )
+import Date exposing ( Date )
+import Time exposing ( Time )
+import Task
 
 -- component import example
-import Components.Hello exposing ( hello )
+-- import Components.Hello exposing ( hello )
 
 
 -- APP
 main : Program Never Int Msg
 main =
-  Html.beginnerProgram { model = model, view = view, update = update }
+  Html.Program 
+    { init = ( Nothing, now )
+    , model = model
+    , view = view
+    , update = update }
 
 
 -- MODEL
-type alias Model = Int
+type alias Model =
+  { participants : List User
+  , entries : List Bill
+  , bill : Bill
+  , user : User
+  }
 
-model : number
-model = 0
+type alias User =
+  { name : String
+  , split : Int
+  }
+
+type alias Bill =
+  { description : String
+  , due : Date
+  , amount : Float
+  , paidBy : List User
+  }
+
+type Msg
+  = NoOp 
+  | SaveUser
+
+model : Model
+model = 
+  { participants = []
+  , entries = []
+  , bill = newBill
+  }
+
+newBill : Bill
+newBill =
+  { description = ""
+  , due = Date.now
+  , amount = 0.0
+  , paidBy = []
+  }
+
+newUser : User
+newUser =
+  { name = ""
+  , split = 0
+  }
 
 
 -- UPDATE
-type Msg = NoOp | Increment
 
-update : Msg -> Model -> Model
+
+
+
+update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
-    NoOp -> model
-    Increment -> model + 1
+    NoOp ->
+      model
+      
+    SaveUser ->
+      { model | participants =
+        participants ++ 
+        [
+          { name = bill.name
+          , split = bill.split
+          }
+        ]
+      }
 
-
+now : Cmd Msg
+now =
+  Task.perform (always (SetDate Nothing)) (Just >> SetDate) Date.now
 -- VIEW
 -- Html is defined as: elem [ attribs ][ children ]
 -- CSS can be applied via class names or inline style attrib
@@ -39,9 +100,9 @@ view model =
     div [ class "row" ][
       div [ class "col-xs-12" ][
         div [ class "jumbotron" ][
-          img [ src "static/img/elm.jpg", style styles.img ] []                             -- inline CSS (via var)
-          , hello model                                                                     -- ext 'hello' component (takes 'model' as arg)
-          , p [] [ text ( "Elm Webpack Starter" ) ]
+          , addUserForm model                                                                     -- ext 'hello' component (takes 'model' as arg)
+
+          , p [] [ text ( "Add a Bill" ) ]
           , button [ class "btn btn-primary btn-lg", onClick Increment ] [                  -- click handler
             span[ class "glyphicon glyphicon-star" ][]                                      -- glyphicon
             , span[][ text "FTW!" ]
@@ -51,6 +112,16 @@ view model =
     ]
   ]
 
+addBillForm : Model -> Html Msg
+addBillForm model =
+    form [ id "user-form" onSubmit SaveUser ] [
+        h1 [] [ text "User Form" ],
+        label [ for "name-field" ] [ text "name: " ],
+        input [ id "name-field", type' "text", value model.user.name ] [],
+        label [ for "percentage"] [text "percentage: " ],
+        input [ id "percentage-field", type' "number", value model.user.split ] [],
+        button [ class "user-button" ] [ text "Add User!" ]
+    ]
 
 -- CSS STYLES
 styles : { img : List ( String, String ) }
