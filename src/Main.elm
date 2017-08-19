@@ -11,7 +11,7 @@ import Maybe exposing (Maybe, withDefault)
 -- APP
 main : Program Never Model Msg
 main =
-  Html.beginnerProgram 
+  Html.beginnerProgram
     { model = model
     , view = view
     , update = update }
@@ -36,28 +36,26 @@ type alias Bill =
   , paidBy : List User
   }
 
-type alias Form = List Input
-
-type alias Input =
-  { value : String
-  , name : String
-  , label : String
-  , inputType : String
-  , error : Maybe String
-  }
-
-type alias Validation = Input -> Maybe String
-
+type alias Form =
+  Dict.Dict String (Maybe String)
 
 
 
 model : Model
-model = 
+model =
   { participants = [david]
   , entries = [water]
-  , bill = billForm 
+  , bill = billForm
   , user = userForm
   }
+
+initUser : User
+initUser =
+  { name = "", split = 0 }
+
+initBill : Bill
+initBill =
+  { description = "", amount = 0.0, paidBy = [] }
 
 david : User
 david = User "David" 0
@@ -65,42 +63,27 @@ david = User "David" 0
 water : Bill
 water = Bill "Water Bill" 12.34 [david]
 
-billForm : Form
-billForm = 
-  [ Input "" "description" "what kinda bill you owe?" "text" Nothing
-  , Input "" "amount" "Amount" "number" Nothing
-  ]
 
 userForm : Form
 userForm =
-  [ Input "" "name" "Name" "text" Nothing
-  , Input "" "split" "% of rent" "number" Nothing
-  ]
+  Dict.fromList
+    [ ( "Name", Nothing )
+    , ( "Percentage", Nothing )
+    ]
 
-submitUser : Form -> Maybe User
-submitUser frm =
-  let
-    isValid : Input -> Bool 
-    isValid inp =
-      case inp.error of
-        Just str ->
-          False
-    formIsValid : Form -> Bool
-    formIsValid frm =
-      List.fold |> List.map isValid frm
-
-    f = 
-      \inp => {i.name = i.value}
-    n =
-  in
-    List.map f frm
+billForm : Form
+billForm =
+  Dict.fromList
+    [ ( "Description", Nothing )
+    , ( "Amount", Nothing )
+    ]
 
 
 -- UPDATE
 
 
 type Msg
-  = NoOp 
+  = NoOp
   | OnInputChanged Input String
   | OnSubmitUser
 
@@ -111,7 +94,7 @@ update msg model =
   case msg of
     NoOp ->
       model
-      
+
     OnInputChanged inp newValue ->
       { model | bill = List.map (updateInput inp newValue) model.bill
               , user = List.map (updateInput inp newValue) model.user }
@@ -135,8 +118,8 @@ validations =
   let
     ifEmpty : String -> (Input -> Maybe String)
     ifEmpty error =
-      \i -> 
-        if i.value == "" then 
+      \i ->
+        if i.value == "" then
           Just error
         else
           Nothing
@@ -176,14 +159,14 @@ validateInput inp =
 view : Model -> Html Msg
 view model =
   div []
-    [ div [] 
+    [ div []
       [ h3 [] [ text "Bills" ]
-      , formView model.bill 
+      , formView model.bill
       , billListView model.entries
       ]
     , div []
       [ h3 [] [ text "Users" ]
-      , formView model.user 
+      , formView model.user
       , userListView model.participants
       ]
     ]
